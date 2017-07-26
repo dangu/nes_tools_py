@@ -6,7 +6,7 @@ def run():
     """Run graphics"""
     top = Tkinter.Tk()
     
-    C = Tkinter.Canvas(top, bg="grey", height=200, width=200, cursor = "crosshair")
+    C = Tkinter.Canvas(top, bg="grey", height=8*16, width=8*16, cursor = "crosshair")
     coord = 10, 50, 100, 120
     arc = C.create_arc(coord, start=0, extent = 150, fill="red")
     
@@ -97,10 +97,28 @@ class Tile:
             byteA=self.data[0][i]
             byteB=self.data[1][i]
             for bit in range(8):
-                char = ((byteA>>(7-bit))&0x01) + 2*((byteB>>(7-bit))&0x01)
-                asciiStr += "%d" %char
+                val = ((byteA>>(7-bit))&0x01) + 2*((byteB>>(7-bit))&0x01)
+                asciiStr += "%d" %val
             asciiStr += '\n'
         return asciiStr
+    
+    def getIntMatrix(self):
+        """Return an 8x8 matrix (a list of lists) with numbers 0,1,2,3
+        corresponding to colors.
+        Example:
+        [[0,0,0,1,0,0,3,0],[0,0,1,1,0,0,1,0],...]"""
+        intMatrix = []
+        for i in range(8):
+            # Loop through 8 bytes
+            byteA=self.data[0][i]
+            byteB=self.data[1][i]
+            intListInner=[]
+            for bit in range(8):
+                val = ((byteA>>(7-bit))&0x01) + 2*((byteB>>(7-bit))&0x01)
+                intListInner.append(val)
+            intMatrix.append(intListInner)
+        return intMatrix
+    
 class Screen:
     """A full screen containing N number of Tiles.
     256x240 pixels
@@ -186,3 +204,28 @@ class TestTile(unittest.TestCase):
             for data in channel:
                 self.assertEqual(data, rawData[i])
                 i+=1
+                
+    def test_plotPixelsInCanvas(self):
+        """Test for plotting pixels in a canvas"""
+        colors=['black', 'green', 'red', 'grey']
+        scale = {'x':16, 'y':16}  # x and y scale
+        top = Tkinter.Tk()
+
+        C = Tkinter.Canvas(top, bg="grey", height=8*scale['y'], width=8*scale['x'], cursor = "crosshair")
+        
+        # Set dummy tile
+        self.tile.setData(self.pixels)
+        matrix = self.tile.getIntMatrix()  # Get the data
+        x=0
+        y=0
+        for row in matrix:
+            for pixel in row:
+                coord = x, y, x+scale['x'], y+scale['y']
+                color = colors[pixel]
+                C.create_rectangle(coord, fill=color)
+                x += scale['x']
+            y += scale['y']
+            x = 0
+        
+        C.pack()
+        top.mainloop()
