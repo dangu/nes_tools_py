@@ -75,7 +75,11 @@ class Tile:
         self.data = [bytestreamA, bytestreamB]
 
         
-    def getRaw(self):
+    def setRawData(self, data):
+        """Set the data directly to the tile as a 16 byte array"""
+        self.data = [data[:8],data[8:16]]
+        
+    def getRawData(self):
         """Return 8x8 pixels of data
         in the correct raw data format"""
         return self.data
@@ -149,3 +153,36 @@ class TestTile(unittest.TestCase):
                 self.assertEqual(pixel, int(asciiMatrixNoWhitespace[i]))
                 i+=1
         
+    def test_load_graphics(self):
+        """Load graphics data from file"""
+        filename = r"../game/src/test.chr"
+        
+        tileNr=0
+        with open(filename, "rb") as f:
+            byte = f.read(1)
+            col = 0
+            byteArray = []
+            while byte !="":
+                if col>15:
+                    print "Tile %d (0x%02X)" %(tileNr, tileNr)
+                    self.tile.setRawData(byteArray) # Write the raw data directly to the tile object
+                    print self.tile.getAsciiMatrix()    # Print the tile as ascii graphic
+                    col = 0
+                    byteArray = []
+                    tileNr += 1
+                byteArray.append(ord(byte))
+                print "0x%02X" %(ord(byte)),
+                col += 1
+                byte = f.read(1)
+
+    def test_setRawData(self):
+        """Test setting raw data values"""
+        rawData = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+        self.tile.setRawData(rawData)
+        rawDataReadback = self.tile.getRawData()
+        
+        i=0
+        for channel in rawDataReadback:
+            for data in channel:
+                self.assertEqual(data, rawData[i])
+                i+=1
