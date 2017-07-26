@@ -80,6 +80,23 @@ class Tile:
         in the correct raw data format"""
         return self.data
     
+    def getAsciiMatrix(self):
+        """Return an 8x8 ascii matrix of the tile,
+        where 0,1,2,3 defines the color value
+        Example:
+        00010000
+        00120000
+        ..."""
+        asciiStr = ""
+        for i in range(8):
+            # Loop through 8 bytes
+            byteA=self.data[0][i]
+            byteB=self.data[1][i]
+            for bit in range(8):
+                char = ((byteA>>(7-bit))&0x01) + 2*((byteB>>(7-bit))&0x01)
+                asciiStr += "%d" %char
+            asciiStr += '\n'
+        return asciiStr
 class Screen:
     """A full screen containing N number of Tiles.
     256x240 pixels
@@ -119,5 +136,16 @@ class TestTile(unittest.TestCase):
         self.assertEqual(self.tile.data, None)
         
         self.createDummyTile()
-       # self.assertEqual(self.tile.data, self.pixels)
+        # self.assertEqual(self.tile.data, self.pixels)
+       
+    def test_inverse(self):
+        self.createDummyTile()
+        asciiMatrix=self.tile.getAsciiMatrix()
+        
+        asciiMatrixNoWhitespace = asciiMatrix.replace('\n', '')
+        i=0
+        for row in self.pixels:
+            for pixel in row:
+                self.assertEqual(pixel, int(asciiMatrixNoWhitespace[i]))
+                i+=1
         
