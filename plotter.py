@@ -9,10 +9,72 @@ def run():
     C = Tkinter.Canvas(top, bg="grey", height=8*16, width=8*16, cursor = "crosshair")
     coord = 10, 50, 100, 120
     arc = C.create_arc(coord, start=0, extent = 150, fill="red")
-    
+
     C.pack()
     top.mainloop()
     
+class TileGroup:
+    """Contains a group of tiles"""
+    def __init__(self):
+        """Init"""
+        self.tiles=[]
+    
+    def loadFromFile(self, filename):
+        """Load tiles from file"""
+       
+        tileNr=0
+        with open(filename, "rb") as f:
+            byte = f.read(1)
+            col = 0
+            byteArray = []
+            while byte !="":
+                # A tile is 16 bytes. After each 16th byte, start a new tile
+                if col>15:
+                    tile = Tile()
+                    #print "Tile %d (0x%02X)" %(tileNr, tileNr)
+                    tile.setRawData(byteArray) # Write the raw data directly to the tile object
+                    #print self.tile.getAsciiMatrix()    # Print the tile as ascii graphic
+                    tile.setIndex(tileNr)
+                    self.tiles.append(tile)
+                    col = 0
+                    byteArray = []
+                    tileNr += 1
+                byteArray.append(ord(byte))
+                #print "0x%02X" %(ord(byte)),
+                col += 1
+                byte = f.read(1)
+    
+    def tilesIterator(self):
+        """This method is using "yield" for returning the
+        tiles"""
+        for tile in self.tiles:
+            yield tile
+
+class PlotterCanvas:
+    def __init__(self, C):
+        self.scale={'x':1, 'y':1}  # x and y scale
+        self.colors = ['black', 'green', 'red', 'grey']
+        self.canvas = C
+        
+    def setScale(self, x, y):
+        """Set the scale in x and y dimension"""
+        self.scale['x'] = x
+        self.scale['y'] = y
+        
+    def plotTileInCanvas(self, tile, xOffset, yOffset):
+        """Plot a tile inside canvas"""
+        matrix = tile.getIntMatrix()  # Get the data
+        x=xOffset
+        y=yOffset
+        for row in matrix:
+            for pixel in row:
+                coord = x, y, x+self.scale['x'], y+self.scale['y']
+                color = self.colors[pixel]
+                self.canvas.create_rectangle(coord, fill=color)
+                x += self.scale['x']
+            y += self.scale['y']
+            x = xOffset
+        
 def bitstreamToByte(bitstream):
     """Convert a bitstream ([0, 0, 1, 0, ...]) 
     to a byte (0xAB)"""
@@ -45,6 +107,11 @@ class Tile:
     def __init__(self):
         """Init"""
         self.data = None
+        self.index = None
+        
+    def setIndex(self, index):
+        """Set the tile index property"""
+        self.index = index
         
     def setData(self, pixels):
         """Set the data according to the input pixels"""
@@ -118,6 +185,8 @@ class Tile:
                 intListInner.append(val)
             intMatrix.append(intListInner)
         return intMatrix
+
+
     
 class Screen:
     """A full screen containing N number of Tiles.
@@ -173,25 +242,7 @@ class TestTile(unittest.TestCase):
         
     def test_load_graphics(self):
         """Load graphics data from file"""
-        filename = r"../game/src/test.chr"
-        
-        tileNr=0
-        with open(filename, "rb") as f:
-            byte = f.read(1)
-            col = 0
-            byteArray = []
-            while byte !="":
-                if col>15:
-                    print "Tile %d (0x%02X)" %(tileNr, tileNr)
-                    self.tile.setRawData(byteArray) # Write the raw data directly to the tile object
-                    print self.tile.getAsciiMatrix()    # Print the tile as ascii graphic
-                    col = 0
-                    byteArray = []
-                    tileNr += 1
-                byteArray.append(ord(byte))
-                print "0x%02X" %(ord(byte)),
-                col += 1
-                byte = f.read(1)
+
 
     def test_setRawData(self):
         """Test setting raw data values"""
@@ -207,25 +258,40 @@ class TestTile(unittest.TestCase):
                 
     def test_plotPixelsInCanvas(self):
         """Test for plotting pixels in a canvas"""
-        colors=['black', 'green', 'red', 'grey']
-        scale = {'x':16, 'y':16}  # x and y scale
         top = Tkinter.Tk()
+        
+        tileGroup = TileGroup()
+        filename = r"../game/src/test.chr"
 
-        C = Tkinter.Canvas(top, bg="grey", height=8*scale['y'], width=8*scale['x'], cursor = "crosshair")
+        # Load a group of tiles from file
+        tileGroup.loadFromFile(filename) 
+
+        nTilesX = 16
+        nTilesY = 16
+        xScale  = 8
+        yScale = xScale
+        C = Tkinter.Canvas(top, bg="grey", width=8*nTilesX*xScale, height=8*nTilesY*yScale, cursor = "crosshair")
+        p = PlotterCanvas(C)
+        p.setScale(xScale, yScale)
         
-        # Set dummy tile
-        self.tile.setData(self.pixels)
-        matrix = self.tile.getIntMatrix()  # Get the data
-        x=0
-        y=0
-        for row in matrix:
-            for pixel in row:
-                coord = x, y, x+scale['x'], y+scale['y']
-                color = colors[pixel]
-                C.create_rectangle(coord, fill=color)
-                x += scale['x']
-            y += scale['y']
-            x = 0
-        
+        xOffset=0
+        yOffset=0
+        for tile in tileGroup.tilesIterator():
+            print tile.index
+           
+            p.plotTileInCanvas(tile, xOffset, yOffset)
+            xOffset += 8*xScale
+            # Start a new row
+            if xOffset>=(nTilesX*8*xScale):
+                yOffset += 8*yScale
+                xOffset = 0
+            
+            if tile.index>200:
+                break
+   
         C.pack()
         top.mainloop()
+
+        
+if __name__=="__main__":
+    print "Running main..."
