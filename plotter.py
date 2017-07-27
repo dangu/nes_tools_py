@@ -1,6 +1,7 @@
 import Tkinter
 
 import unittest
+import constants
 
 def run():
     """Run graphics"""
@@ -53,7 +54,6 @@ class TileGroup:
 class PlotterCanvas:
     def __init__(self, C):
         self.scale={'x':1, 'y':1}  # x and y scale
-        self.colors = ['black', 'green', 'red', 'grey']
         self.canvas = C
         
     def setScale(self, x, y):
@@ -69,8 +69,8 @@ class PlotterCanvas:
         for row in matrix:
             for pixel in row:
                 coord = x, y, x+self.scale['x'], y+self.scale['y']
-                color = self.colors[pixel]
-                self.canvas.create_rectangle(coord, fill=color)
+                color = tile.getPalette().getColor(pixel)
+                self.canvas.create_rectangle(coord, fill=color, outline="black")
                 x += self.scale['x']
             y += self.scale['y']
             x = xOffset
@@ -91,11 +91,31 @@ class Pixel:
         """Init"""
         pass
     
+class Palette:
+    """A palette with four colors"""
+    def __init__(self):
+        """Init"""
+        self.colors=None
+        
+    def setColors(self, colors):
+        """Set the four colors to use
+        Arguments:
+        colors    A list with four colors"""
+        self.colors = colors
+        
+    def getColors(self):
+        """Return the colors list"""
+        return self.colors
+    
+    def getColor(self, index):
+        """Return the color specified by index argument"""
+        return self.colors[index]
+    
 class Tile:
     """An 8x8 pixel tile
     
-    A tile is stored s two 8 byte color channels. 
-    nice explanation is found in [1]. The corresponding
+    A tile is stored as two 8 byte color channels. 
+    A nice explanation is found in [1]. The corresponding
     colors are pulled from the palette.
     
     Channel A  | Channel B | Composite
@@ -108,6 +128,15 @@ class Tile:
         """Init"""
         self.data = None
         self.index = None
+        self.palette = None
+        
+    def setPalette(self, palette):
+        """Set the palette to be used with this tile"""
+        self.palette = palette
+        
+    def getPalette(self):
+        """Return the palette used with this tile"""
+        return self.palette
         
     def setIndex(self, index):
         """Set the tile index property"""
@@ -265,6 +294,10 @@ class TestTile(unittest.TestCase):
 
         # Load a group of tiles from file
         tileGroup.loadFromFile(filename) 
+        
+        # Set the colors to use with the tiles
+        palette = Palette()
+        palette.setColors(['black', 'green', 'yellow', 'grey'])
 
         nTilesX = 16
         nTilesY = 16
@@ -278,6 +311,7 @@ class TestTile(unittest.TestCase):
         yOffset=0
         for tile in tileGroup.tilesIterator():
             print tile.index
+            tile.setPalette(palette)
            
             p.plotTileInCanvas(tile, xOffset, yOffset)
             xOffset += 8*xScale
