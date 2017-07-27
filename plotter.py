@@ -1,19 +1,49 @@
 import Tkinter
 
 import unittest
-import constants
 
 def run():
     """Run graphics"""
     top = Tkinter.Tk()
     
-    C = Tkinter.Canvas(top, bg="grey", height=8*16, width=8*16, cursor = "crosshair")
-    coord = 10, 50, 100, 120
-    arc = C.create_arc(coord, start=0, extent = 150, fill="red")
-
+    tileGroup = TileGroup()
+    filename = r"../game/src/test.chr"
+    
+    # Load a group of tiles from file
+    tileGroup.loadFromFile(filename) 
+    
+    # Set the colors to use with the tiles
+    palette = Palette()
+    palette.setColors(['black', 'green', 'yellow', 'grey'])
+    
+    nTilesX = 16
+    nTilesY = 32
+    xScale  = 3
+    yScale = xScale
+    C = Tkinter.Canvas(top, bg="grey", width=8*nTilesX*xScale, height=8*nTilesY*yScale, cursor = "crosshair")
+    p = PlotterCanvas(C)
+    p.setScale(xScale, yScale)
+    
+    xOffset=0
+    yOffset=0
+    for tile in tileGroup.tilesIterator():
+        print tile.index
+        tile.setPalette(palette)
+       
+        p.plotTileInCanvas(tile, xOffset, yOffset)
+        xOffset += 8*xScale
+        # Start a new row
+        if xOffset>=(nTilesX*8*xScale):
+            yOffset += 8*yScale
+            xOffset = 0
+        
+#        if tile.index>200:
+#            break
+    
     C.pack()
     top.mainloop()
-    
+
+ 
 class TileGroup:
     """Contains a group of tiles"""
     def __init__(self):
@@ -28,22 +58,26 @@ class TileGroup:
             byte = f.read(1)
             col = 0
             byteArray = []
-            while byte !="":
+            while True:
                 # A tile is 16 bytes. After each 16th byte, start a new tile
                 if col>15:
                     tile = Tile()
                     #print "Tile %d (0x%02X)" %(tileNr, tileNr)
                     tile.setRawData(byteArray) # Write the raw data directly to the tile object
-                    #print self.tile.getAsciiMatrix()    # Print the tile as ascii graphic
+                    #print tile.getAsciiMatrix()    # Print the tile as ascii graphic
                     tile.setIndex(tileNr)
                     self.tiles.append(tile)
                     col = 0
                     byteArray = []
                     tileNr += 1
+                if byte == "":
+                    break
                 byteArray.append(ord(byte))
                 #print "0x%02X" %(ord(byte)),
                 col += 1
                 byte = f.read(1)
+
+        print "Loaded %d tiles from file" %(tileNr)
     
     def tilesIterator(self):
         """This method is using "yield" for returning the
@@ -285,47 +319,7 @@ class TestTile(unittest.TestCase):
                 self.assertEqual(data, rawData[i])
                 i+=1
                 
-    def test_plotPixelsInCanvas(self):
-        """Test for plotting pixels in a canvas"""
-        top = Tkinter.Tk()
-        
-        tileGroup = TileGroup()
-        filename = r"../game/src/test.chr"
-
-        # Load a group of tiles from file
-        tileGroup.loadFromFile(filename) 
-        
-        # Set the colors to use with the tiles
-        palette = Palette()
-        palette.setColors(['black', 'green', 'yellow', 'grey'])
-
-        nTilesX = 16
-        nTilesY = 16
-        xScale  = 8
-        yScale = xScale
-        C = Tkinter.Canvas(top, bg="grey", width=8*nTilesX*xScale, height=8*nTilesY*yScale, cursor = "crosshair")
-        p = PlotterCanvas(C)
-        p.setScale(xScale, yScale)
-        
-        xOffset=0
-        yOffset=0
-        for tile in tileGroup.tilesIterator():
-            print tile.index
-            tile.setPalette(palette)
-           
-            p.plotTileInCanvas(tile, xOffset, yOffset)
-            xOffset += 8*xScale
-            # Start a new row
-            if xOffset>=(nTilesX*8*xScale):
-                yOffset += 8*yScale
-                xOffset = 0
-            
-            if tile.index>200:
-                break
-   
-        C.pack()
-        top.mainloop()
-
         
 if __name__=="__main__":
     print "Running main..."
+    run()
