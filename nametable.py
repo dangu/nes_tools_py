@@ -25,18 +25,18 @@ class Nametable:
         """Set the blocks in the nametable"""
         self.blocks = blocks
         
-    def dumpToFile(self, filename):
+    def dumpToFile(self, filename, ntTag, attrTag):
         """Dump the nametable to a file using the following format:
         .nametable .db $00, $01, $02, ...  
         
         .attribute .db %10110001, %10110010, ..."""
         f = open(filename, 'w')
         f.write("; Nametable generated from Python script\n\n")
-        self._dumpNametableBytes(f)
-        self._dumpAttributeBytes(f)
+        self._dumpNametableBytes(f, tag=ntTag)
+        self._dumpAttributeBytes(f, tag=attrTag)
         f.close()
         
-    def _dumpNametableBytes(self, f):
+    def _dumpNametableBytes(self, f, tag):
         """Dump the bytes of the nametable
         One byte corresponds to a tile number
         
@@ -71,8 +71,8 @@ class Nametable:
         
         # Now all tile indexes are stored in the list bytestream
         byteCounter = 0
-        dumpStr += ".nametable:\n"
-        dumpStr += "    .db "
+        dumpStr += "\n%s:" %(tag)
+        dumpStr += "\n    .db "
         for byte in bytestream:
             if byteCounter>=self.settings['numDumpedBytesInRow']:
                 # Start a new row in the output file
@@ -88,13 +88,13 @@ class Nametable:
             
                 
 
-    def _dumpAttributeBytes(self, f):
+    def _dumpAttributeBytes(self, f, tag):
         """Dump the attribute bytes in binary format
         for better readability"""
         dumpStr = ""
         
         byteCounter = 0
-        dumpStr += "\n.attribute:"
+        dumpStr += "\n%s:" %(tag)
         dumpStr += "\n    .db "
         for block in self.blocks:
             if byteCounter>=self.settings['numDumpedAttrInRow']:
@@ -160,8 +160,8 @@ class TestNametable(unittest.TestCase):
             
             attributeCt += 1
         n.setBlocks(blocks)
-        filename = r"test_dump.asm"
-        n.dumpToFile(filename)
+        filename = r"../game/src/test_dump.asm"
+        n.dumpToFile(filename, "nametable2", "attribute2")
         
     
 if __name__ == "__main__":
