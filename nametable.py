@@ -1,4 +1,4 @@
-from block import Block
+from block import Block, Attribute
 from plotter import Tile
 import unittest
 
@@ -13,7 +13,9 @@ class Nametable:
         """Init"""
         self.blocks = None
         self.nTiles={'x':16, 'y':15} # Tiles resolution
-        self.settings={'numDumpedBytesInRow':16}
+        self.settings={'numDumpedBytesInRow':16, # The number of bytes in a row in the dump file
+                       'numDumpedAttrInRow':6,  # Number of attribute bytes in row
+                       }
     
     def getBlocks(self):
         """Get all blocks in the nametable"""
@@ -79,7 +81,8 @@ class Nametable:
                 byteCounter = 0
             dumpStr += "$%02X," %(byte)
             byteCounter += 1
-
+        
+        dumpStr = dumpStr[:-1] # Strip last ", "
         dumpStr += "\n"
         f.write(dumpStr)
             
@@ -88,7 +91,22 @@ class Nametable:
     def _dumpAttributeBytes(self, f):
         """Dump the attribute bytes in binary format
         for better readability"""
-        pass
+        dumpStr = ""
+        
+        byteCounter = 0
+        dumpStr += "\n.attribute:"
+        dumpStr += "\n    .db "
+        for block in self.blocks:
+            if byteCounter>=self.settings['numDumpedAttrInRow']:
+                # Start a new row in the output file
+                dumpStr = dumpStr[:-1] # Strip last ", "
+                dumpStr += "\n    .db "
+                byteCounter = 0
+            dumpStr += "%%%s," %(block.getAttribute().getAttributeByteStr())
+            byteCounter += 1
+        dumpStr = dumpStr[:-1] # Strip last ", "
+        dumpStr += "\n"
+        f.write(dumpStr)
         
     
 class NametableViewer:
@@ -131,10 +149,16 @@ class TestNametable(unittest.TestCase):
 
         # Create blocks with these tiles
         blocks = []
+        attributeCt=0
         for i in range(16):
             block = Block()
+            attr = Attribute()
+            attr.setAttributeByte(attributeCt) # Set the attribute to a counter value
             block.setTiles(tiles)
+            block.setAttribute(attr)
             blocks.append(block)
+            
+            attributeCt += 1
         n.setBlocks(blocks)
         filename = r"test_dump.asm"
         n.dumpToFile(filename)
