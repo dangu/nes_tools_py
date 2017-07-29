@@ -1,4 +1,5 @@
 import unittest
+from plotter import Tile
 
 class Block:
     """A block is composed of four tiles and an attribute byte.
@@ -8,7 +9,23 @@ class Block:
         """Init"""
         self.tiles = None
         self.attribute = None
+    
+    def getTiles(self):
+        """Get the tiles lise"""
+        return self.tiles
+    
+    def setTiles(self, tiles):
+        """Set the list of tiles"""
+        assert(len(tiles)==4)
+        self.tiles = tiles
         
+    def getAttribute(self):
+        """Get the attribute"""
+        return self.attribute
+        
+    def setAttribute(self, attr):
+        """Set the attribute"""
+        self.attribute = attr    
         
 class Attribute:
     """The attribute is used in a block to set the palette used
@@ -112,3 +129,16 @@ class TestTile(unittest.TestCase):
         self.assertEqual(a.getAttribute(tileId=3), 0x03)
         #print a.getAttributeByteStr()
         
+class TestBlock(unittest.TestCase):
+    def test_init(self):
+        b = Block()
+        
+        # Create four tiles to use
+        tiles = []
+        for i in range(4):
+            tiles.append(Tile())
+        a = Attribute()
+        a.setAttributeByte(0xCA)
+        
+        b.setTiles(tiles)
+        b.setAttribute(a)

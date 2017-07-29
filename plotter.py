@@ -172,6 +172,10 @@ class Tile:
         """Return the palette used with this tile"""
         return self.palette
         
+    def getIndex(self):
+        """Get the tile index"""
+        return self.index
+    
     def setIndex(self, index):
         """Set the tile index property"""
         self.index = index
