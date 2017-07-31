@@ -4,11 +4,15 @@ import unittest
 
 class Nametable:
     """A nametable is composed of a number of blocks, 
-    each of which containing four tiles and an attribute byte
+    each of which containing 2x2 tiles and an attribute byte
     
     The complete nametable has a size of 0x3C0 (960) bytes with
-    a row width of 32 tiles (the height will then be 30 tiles
-    which is 7.5 blocks. Todo: How is this handled?"""
+    a width of 32 tiles (16 blocks) and a height of 30 tiles
+    (15 blocks).
+    
+    Total number of bytes or tiles: 960
+                    blocks:         240
+    """
     def __init__(self):
         """Init"""
         self.blocks = None
@@ -68,6 +72,8 @@ class Nametable:
                 # Add the rows to the bytestream
                 bytestream += bytestreamRow1+bytestreamRow2
                 tilesInRow=0
+                bytestreamRow1 = []
+                bytestreamRow2 = []
         
         # Now all tile indexes are stored in the list bytestream
         byteCounter = 0
@@ -150,7 +156,7 @@ class TestNametable(unittest.TestCase):
         # Create blocks with these tiles
         blocks = []
         attributeCt=0
-        for i in range(16):
+        for i in range(240):
             block = Block()
             attr = Attribute()
             attr.setAttributeByte(attributeCt) # Set the attribute to a counter value
