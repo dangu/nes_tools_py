@@ -11,13 +11,28 @@ class Block:
         self.attribute = None
     
     def getTiles(self):
-        """Get the tiles lise"""
+        """Get the tiles list"""
         return self.tiles
     
     def setTiles(self, tiles):
         """Set the list of tiles"""
         assert(len(tiles)==4*4)
         self.tiles = tiles
+        
+    def getRowForNametable(self, rowNumber):
+        """Get a complete row of tile indexes
+        for creating nametable"""
+        assert(0<=rowNumber<=3)
+        
+        row = []
+        
+        # Create the mapping for this row
+        tileNums = [tileNum+rowNumber*4 for tileNum in [0,1,2,3]]
+        
+        for tileNum in tileNums:
+            row.append(self.tiles[tileNum].getIndex())
+
+        return row
         
     def getAttribute(self):
         """Get the attribute"""

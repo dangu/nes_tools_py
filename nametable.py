@@ -4,14 +4,22 @@ import unittest
 
 class Nametable:
     """A nametable is composed of a number of blocks, 
-    each of which containing 2x2 tiles and an attribute byte
+    each of which containing 4*4 tiles and an attribute byte
     
-    The complete nametable has a size of 0x3C0 (960) bytes with
-    a width of 32 tiles (16 blocks) and a height of 30 tiles
-    (15 blocks).
+    The complete nametable contains 0x3C0 (960) bytes of tile
+    references corresponding to a width of 32 tiles (8 blocks) 
+    and a height of 30 tiles (7.5 blocks).
     
     Total number of bytes or tiles: 960
-                    blocks:         240
+                    blocks:         8*7=56 whole blocks and 8 half blocks
+                    
+    After the tile references comes an attribute table of 64 bytes
+    (8*8 blocks). Each byte in the attribute table describes the palette
+    used for each of the subblocks of 2*2 tiles within the block.
+    Each nibble of the attribute byte sets the palette used for
+    the corresponding subblock.
+    
+    Total number of bytes: 960+64=1024
     """
     def __init__(self):
         """Init"""
@@ -45,35 +53,36 @@ class Nametable:
         One byte corresponds to a tile number
         
         The blocks are written line by line, which means
-        that the top two tiles in each block in a row is written first.
-        Then the bottom two tiles of each block is written in the next line.
-        After this the next row uses the top two tiles of the next blocks and so on."""
+        that the top four tiles of each block in a row is written first.
+        Then the next four tiles of each block is written in the next line
+        and so on."""
         
         # The blocks need to be split into rows with bytes
         #       Block1  Block2  Block3
         # Row1  AB      EF      IJ
         # Row2  CD      GH      KL
         #
+        N_ROWS = 4      # Number of rows in a block
+        N_COLS = 4      # Number of columns in a block
         dumpStr     = ""
         tilesInRow=0
         bytestream      = []
-        bytestreamRow1  = []
-        bytestreamRow2  = []
+        bytestreamRows  = [[] for i in range(N_ROWS)]
         for block in self.blocks:
-            tiles = block.getTiles()
+            # Dump the data four rows at a time
+            for row in range(N_ROWS):
+                bytestreamRows[row]+=block.getRowForNametable(row)
             # Split the block into row bytestreams
-            bytestreamRow1.append(tiles[0].getIndex())
-            bytestreamRow1.append(tiles[1].getIndex())
-            bytestreamRow2.append(tiles[2].getIndex())
-            bytestreamRow2.append(tiles[3].getIndex())
-            tilesInRow += 2 # Add two tiles to the tiles row counter
+            tilesInRow += N_COLS # Add two tiles to the tiles row counter
             if tilesInRow >= self.nTiles['x']:
                 # Finished one row
                 # Add the rows to the bytestream
-                bytestream += bytestreamRow1+bytestreamRow2
+                for bytestreamRow in bytestreamRows:
+                    bytestream += bytestreamRow
+                    
+                # Reset to beginning of next row
                 tilesInRow=0
-                bytestreamRow1 = []
-                bytestreamRow2 = []
+                bytestreamRows  = [[] for i in range(N_ROWS)]
         
         # Now all tile indexes are stored in the list bytestream
         byteCounter = 0
@@ -145,7 +154,7 @@ class TestNametable(unittest.TestCase):
         
         # Create four tiles in a list
         tiles = []
-        for i in range(4):
+        for i in range(4*4):
             tiles.append(Tile())
             
         idNum=0
