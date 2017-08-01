@@ -9,6 +9,10 @@ class Block:
         """Init"""
         self.tiles = None
         self.attribute = None
+        self.inBottomRow = False  # This signals if this block is in the
+                                    # last row of the nametable. This row
+                                    # only uses blocks with a height of
+                                    # 2 tiles
     
     def getTiles(self):
         """Get the tiles list"""
@@ -29,8 +33,13 @@ class Block:
         # Create the mapping for this row
         tileNums = [tileNum+rowNumber*4 for tileNum in [0,1,2,3]]
         
-        for tileNum in tileNums:
-            row.append(self.tiles[tileNum].getIndex())
+        # Special case if the block is in the bottom row of the nametable.
+        # Only the top two rows are used in these blocks.
+        if self.inBottomRow and rowNumber>1:
+            row=[]
+        else:
+            for tileNum in tileNums:
+                row.append(self.tiles[tileNum].getIndex())
 
         return row
         
@@ -41,6 +50,17 @@ class Block:
     def setAttribute(self, attr):
         """Set the attribute"""
         self.attribute = attr    
+        
+    def isInBottomRow(self):
+        """Mark this block as being located in the
+        bottom row of the nametable"""
+        self.inBottomRow = True
+        
+    def isNotInBottomRow(self):
+        """Mark that this block is not located in the
+        bottom row of the nametable (this is the default
+        setting when creating a new block)"""
+        self.inBottomRow = False
         
 class Attribute:
     """The attribute is used in a block to set the palette used

@@ -24,7 +24,7 @@ class Nametable:
     def __init__(self):
         """Init"""
         self.blocks = None
-        self.nTiles={'x':16, 'y':15} # Tiles resolution
+        self.nTiles={'x':32, 'y':30} # The nametable size in sprites
         self.settings={'numDumpedBytesInRow':16, # The number of bytes in a row in the dump file
                        'numDumpedAttrInRow':6,  # Number of attribute bytes in row
                        }
@@ -165,12 +165,14 @@ class TestNametable(unittest.TestCase):
         # Create blocks with these tiles
         blocks = []
         attributeCt=0
-        for i in range(240):
+        for i in range(64):
             block = Block()
             attr = Attribute()
             attr.setAttributeByte(attributeCt) # Set the attribute to a counter value
             block.setTiles(tiles)
             block.setAttribute(attr)
+            if i>=(8*7):
+                block.isInBottomRow()  # This block is in the bottom row (half height)
             blocks.append(block)
             
             attributeCt += 1
