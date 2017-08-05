@@ -16,32 +16,96 @@ class MainWindow(tk.Frame):
         l = tk.Label(t, text="This is window #%s" % self.counter)
         l.pack(side="top", fill="both", expand=True, padx=100, pady=100)
         
+class Color():
+    """Containing methods for handling a color"""
+    def __init__(self, rgbValues):
+        """Init"""
+        self._rgbValues = rgbValues
+        
+    def tkColor(self):
+        """Return in a format that Tkinter can understand
+        
+
+        Example:
+        "#12FA43"
+        """
+        colorInHex = "#%02X%02X%02X" %(self._rgbValues[0], 
+                                       self._rgbValues[1], 
+                                       self._rgbValues[2])
+        return colorInHex
+    
+def importColors():
+    """Import all colors and wrap them in Color objects"""
+    colors = []
+    for color in constants.PALETTE:
+        colors.append(Color(color))
+    return colors
+    
+class ColorPicker():
+    """The color picker window"""
+    def __init__(self, main):
+        """Init"""
+        toplevel = tk.Toplevel(main)
+ 
+        canvas = tk.Canvas(toplevel, width=500, height=400, bd=0, highlightthickness=0)
+        canvas.pack()
+        self.canvas = canvas
+        
+        self._colors = importColors()
+        self._fgColor = self._colors[0]
+        self._bgColor = self._colors[2]
+        
+        self.drawPalette()
+        self.drawFgBgColors()
+        # Bind events
+        self.canvas.bind("<Button-3>", self.canvas_leftMouseBtn)
+        self.canvas.bind("<Button-1>", self.canvas_rightMouseBtn)
+        
+
+        
+    
+    def drawPalette(self):
+        """Show the complete palette"""
+        x=0
+        y=0
+        width=20
+        height=20
+        rowWidth = 16
+        ct = 0
+        for color in self._colors:
+            self.canvas.create_rectangle(x,y, x+width,y+height, fill=color.tkColor())
+            x+=width
+            ct += 1
+            if ct>=rowWidth:
+                ct=0
+                y+=height
+                x=0
+    def drawFgBgColors(self):
+        """Draw the two foreground/background color fields"""
+        xFg = 300
+        yFg = 300
+        szFg = 30
+        xBg = xFg+10
+        yBg = yFg+10
+        szBg = szFg
+        self.canvas.create_rectangle(xBg,yBg,xBg+szBg,yBg+szBg, fill=self._bgColor.tkColor())
+        self.canvas.create_rectangle(xFg,yFg,xFg+szFg,yFg+szFg, fill=self._fgColor.tkColor())
+        
+    def canvas_leftMouseBtn(self, event):
+        """Callback for left mouse button"""
+        self.canvas.create_rectangle(x,y, x+width,y+height, fill=colorInHex)
+        
+        
+    def canvas_rightMouseBtn(self, event):
+        """Callback for right mouse button"""
+                
 if __name__ == "__main__":
     root = tk.Tk()
     main = MainWindow(root)
-    win2 = tk.Toplevel(main)
+   
+
     
-    canvas = tk.Canvas(win2, width=500, height=400, bd=0, highlightthickness=0)
-    canvas.pack()
-    
-    x=0
-    y=0
-    width=20
-    height=20
-    windowWidth = 500
-    windowHeight = 400
-    rowWidth = 16
-    ct = 0
-    for color in constants.PALETTE:
-        print color
-        colorInHex = "#%02X%02X%02X" %(color[0], color[1], color[2])
-        canvas.create_rectangle(x,y, x+width,y+height, fill=colorInHex)
-        x+=width
-        ct += 1
-        if ct>=rowWidth:
-            ct=0
-            y+=height
-            x=0
+    colorPicker = ColorPicker(main)
     
     main.pack(side="top", fill="both", expand=True)
 
