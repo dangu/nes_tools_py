@@ -54,12 +54,13 @@ class ColorPicker():
         self._colors = importColors()
         self._fgColor = self._colors[0]
         self._bgColor = self._colors[2]
+        self.settings = {'cellSize':[20,20],}
         
         self.drawPalette()
         self.drawFgBgColors()
         # Bind events
-        self.canvas.bind("<Button-3>", self.canvas_leftMouseBtn)
-        self.canvas.bind("<Button-1>", self.canvas_rightMouseBtn)
+        self.canvas.bind("<Button-1>", self.canvas_leftMouseBtn)
+        self.canvas.bind("<Button-3>", self.canvas_rightMouseBtn)
         
 
         
@@ -68,8 +69,8 @@ class ColorPicker():
         """Show the complete palette"""
         x=0
         y=0
-        width=20
-        height=20
+        width=self.settings['cellSize'][0]
+        height=self.settings['cellSize'][1]
         rowWidth = 16
         ct = 0
         for color in self._colors:
@@ -93,8 +94,15 @@ class ColorPicker():
         
     def canvas_leftMouseBtn(self, event):
         """Callback for left mouse button"""
-        self.canvas.create_rectangle(x,y, x+width,y+height, fill=colorInHex)
-        
+        col = event.x/self.settings['cellSize'][0]
+        row = event.y/self.settings['cellSize'][1]
+        if (0<=col<=15) and (0<=row<=3):
+            index = row*16+col
+            print row,col, index
+            self._fgColor = self._colors[index]
+            self.drawFgBgColors()
+
+     
         
     def canvas_rightMouseBtn(self, event):
         """Callback for right mouse button"""

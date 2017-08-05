@@ -89,6 +89,7 @@ class PlotterCanvas:
     def __init__(self, C):
         self.scale={'x':1, 'y':1}  # x and y scale
         self.canvas = C
+        self.canvas.bind("<B1-Motion>", self.canvas_paint)
         
     def setScale(self, x, y):
         """Set the scale in x and y dimension"""
@@ -108,6 +109,10 @@ class PlotterCanvas:
                 x += self.scale['x']
             y += self.scale['y']
             x = xOffset
+            
+    def canvas_paint(self, event):
+        """Try to paint some pixels when left mouse button is pressed"""
+        self.canvas.create_rectangle(event.x-10, event.y-10, event.x, event.y, fill = "yellow", outline = "yellow")
         
 def bitstreamToByte(bitstream):
     """Convert a bitstream ([0, 0, 1, 0, ...]) 

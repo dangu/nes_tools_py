@@ -24,7 +24,7 @@ class Nametable:
     def __init__(self):
         """Init"""
         self.blocks = None
-        self.nTiles={'x':32, 'y':30} # The nametable size in sprites
+        self.nTiles={'x':32, 'y':30} # The nametable size in tiles
         self.settings={'numDumpedBytesInRow':16, # The number of bytes in a row in the dump file
                        'numDumpedAttrInRow':6,  # Number of attribute bytes in row
                        }
