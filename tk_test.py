@@ -94,18 +94,30 @@ class ColorPicker():
         
     def canvas_leftMouseBtn(self, event):
         """Callback for left mouse button"""
+        self._changeFgBgColor(event, which="fg")
+
+    def canvas_rightMouseBtn(self, event):
+        """Callback for right mouse button"""
+        self._changeFgBgColor(event, which="bg")    
+    
+    def _changeFgBgColor(self, event, which):
+        """Change either the foreground or the background 
+        color, depending on the input parameter which.
+        which=="fg" => Foreground color
+        which=="bg" => Background color"""
+        assert((which == "fg") or (which == "bg"))
+        
         col = event.x/self.settings['cellSize'][0]
         row = event.y/self.settings['cellSize'][1]
         if (0<=col<=15) and (0<=row<=3):
             index = row*16+col
             print row,col, index
-            self._fgColor = self._colors[index]
+            if which == "fg":
+                self._fgColor = self._colors[index]
+            elif which=="bg":
+                self._bgColor = self._colors[index]
             self.drawFgBgColors()
-
      
-        
-    def canvas_rightMouseBtn(self, event):
-        """Callback for right mouse button"""
                 
 if __name__ == "__main__":
     root = tk.Tk()
