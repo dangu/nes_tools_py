@@ -1,7 +1,19 @@
 from block import Block, Attribute
-from plotter import Tile
+from plotter import Tile, CanvasPlotter
+from plotter import TileGroup
+from plotter import Palette
+import Tkinter as tk
 import unittest
 
+def run():
+    """Run the nametable viewer"""
+    root = tk.Tk()
+    nv = NametableViewer(root)
+    
+    nv.pack(side="top", fill="both", expand=True)
+
+    root.mainloop()
+    
 class Nametable:
     """A nametable is composed of a number of blocks, 
     each of which containing 4*4 tiles and an attribute byte
@@ -124,11 +136,64 @@ class Nametable:
         f.write(dumpStr)
         
     
-class NametableViewer:
-    def __init_(self):
-        """Init"""
-        pass
+class NametableViewer(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+        nametableCanvas = tk.Canvas(self,  width=500, height=400, bd=0, highlightthickness=0)
+        nametableCanvas.pack()
+        
+        self._nametable = None
+        self._createEmptyNametable()
+        self.canvasPlotter = CanvasPlotter(nametableCanvas)
+        self.canvasPlotter.setScale(10,10)
+        blocks = self._nametable.getBlocks()
+        
+        tileGroup = TileGroup()
+        filename = r"../game/src/test.chr"
     
+        # Load a group of tiles from file
+        tileGroup.loadFromFile(filename) 
+        
+        tile = tileGroup.getTile(blocks[0].getRowForNametable(0)[0])
+        
+        # Set the colors to use with the tiles
+        palette = Palette()
+        palette.setColors(['black', 'green', 'yellow', 'grey'])
+        tile.setPalette(palette)
+        xOffset = 0
+        yOffset = 0
+        self.canvasPlotter.plotTileInCanvas(tile, xOffset, yOffset)
+        
+    def _createEmptyNametable(self):
+        """Create a complete nametable using empty tiles"""
+        self._nametable = Nametable()
+        
+        # Create four tiles in a list
+        tiles = []
+        for i in range(4*4):
+            tiles.append(Tile())
+            
+        idNum=0
+        for tile in tiles:
+            tile.setIndex(idNum)
+            idNum +=1
+
+        # Create blocks with these tiles
+        blocks = []
+        attributeCt=0
+        for i in range(64):
+            block = Block()
+            attr = Attribute()
+            attr.setAttributeByte(attributeCt) # Set the attribute to a counter value
+            block.setTiles(tiles)
+            block.setAttribute(attr)
+            if i>=(8*7):
+                block.isInBottomRow()  # This block is in the bottom row (half height)
+            blocks.append(block)
+            
+            attributeCt += 1
+        self._nametable.setBlocks(blocks)
+            
 class Tiles:
     """Class for handling tiles"""
     def __init__(self):
@@ -182,6 +247,6 @@ class TestNametable(unittest.TestCase):
         
     
 if __name__ == "__main__":
-    #nv = NametableViewer()
-    t = Tiles()
-    t.open(r"../game/src/test.chr")
+    run()
+    #t = Tiles()
+    #t.open(r"../game/src/test.chr")

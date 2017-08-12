@@ -27,14 +27,17 @@ def importColors():
     
     
 class ColorPicker():
-    """The color picker window"""
-    def __init__(self, main):
+    """The color picker window
+    main             The main window
+    plotterCanvas    The plotter canvas window"""
+    def __init__(self, main, plotterCanvas):
         """Init"""
         toplevel = tk.Toplevel(main)
  
         canvas = tk.Canvas(toplevel, width=500, height=400, bd=0, highlightthickness=0)
         canvas.pack()
         self.canvas = canvas
+        self.plotterCanvas = plotterCanvas
         
         self._colors = importColors()
         self._fgColor = self._colors[0]
@@ -99,5 +102,7 @@ class ColorPicker():
                 self._fgColor = self._colors[index]
             elif which=="bg":
                 self._bgColor = self._colors[index]
+            # Communicate the colors to the plotter window
+            self.plotterCanvas.setFgBgColors(self._fgColor, self._bgColor)
             self.drawFgBgColors()
      

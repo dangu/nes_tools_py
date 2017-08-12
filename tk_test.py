@@ -1,5 +1,4 @@
 import Tkinter as tk
-
 from colors import ColorPicker
 
 class MainWindow(tk.Frame):
@@ -21,8 +20,6 @@ if __name__ == "__main__":
     root = tk.Tk()
     main = MainWindow(root)
    
-
-    
     colorPicker = ColorPicker(main)
     
     main.pack(side="top", fill="both", expand=True)

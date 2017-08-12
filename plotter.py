@@ -1,5 +1,5 @@
 import Tkinter
-
+from colors import ColorPicker, importColors
 import unittest
 
 def run():
@@ -21,7 +21,7 @@ def run():
     xScale  = 3
     yScale = xScale
     C = Tkinter.Canvas(top, bg="grey", width=8*nTilesX*xScale, height=8*nTilesY*yScale, cursor = "crosshair")
-    p = PlotterCanvas(C)
+    p = CanvasPlotter(C)
     p.setScale(xScale, yScale)
     
     xOffset=0
@@ -41,6 +41,7 @@ def run():
 #            break
     
     C.pack()
+    colorPicker = ColorPicker(top, p)
     top.mainloop()
 
  
@@ -48,7 +49,7 @@ class TileGroup:
     """Contains a group of tiles"""
     def __init__(self):
         """Init"""
-        self.tiles=[]
+        self._tiles=[]
     
     def loadFromFile(self, filename):
         """Load tiles from file"""
@@ -66,7 +67,7 @@ class TileGroup:
                     tile.setRawData(byteArray) # Write the raw data directly to the tile object
                     #print tile.getAsciiMatrix()    # Print the tile as ascii graphic
                     tile.setIndex(tileNr)
-                    self.tiles.append(tile)
+                    self._tiles.append(tile)
                     col = 0
                     byteArray = []
                     tileNr += 1
@@ -82,19 +83,29 @@ class TileGroup:
     def tilesIterator(self):
         """This method is using "yield" for returning the
         tiles"""
-        for tile in self.tiles:
+        for tile in self._tiles:
             yield tile
+            
+    def getTile(self, idx):
+        """Get the tile with the given index"""
+        return self._tiles[idx]
 
-class PlotterCanvas:
+class CanvasPlotter:
     def __init__(self, C):
         self.scale={'x':1, 'y':1}  # x and y scale
         self.canvas = C
         self.canvas.bind("<B1-Motion>", self.canvas_paint)
+        self._colors = importColors()
         
     def setScale(self, x, y):
         """Set the scale in x and y dimension"""
         self.scale['x'] = x
         self.scale['y'] = y
+        
+    def setFgBgColors(self, fgColor, bgColor):
+        """Set the foreground and backround colors to be plotted"""
+        self._fgColor = fgColor
+        self._bgColor = bgColor
         
     def plotTileInCanvas(self, tile, xOffset, yOffset):
         """Plot a tile inside canvas"""
@@ -112,7 +123,7 @@ class PlotterCanvas:
             
     def canvas_paint(self, event):
         """Try to paint some pixels when left mouse button is pressed"""
-        self.canvas.create_rectangle(event.x-10, event.y-10, event.x, event.y, fill = "yellow", outline = "yellow")
+        self.canvas.create_rectangle(event.x-10, event.y-10, event.x, event.y, fill = self._fgColor.tkColor() , outline = self._fgColor.tkColor())
         
 def bitstreamToByte(bitstream):
     """Convert a bitstream ([0, 0, 1, 0, ...]) 
